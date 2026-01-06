@@ -16,12 +16,36 @@ import {
 function Waitlist() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Handle form submission here
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 3000)
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('https://formspree.io/f/mblazbzq', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        setSubmitted(true)
+        setEmail('')
+        setTimeout(() => setSubmitted(false), 5000)
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Something went wrong. Please try again.')
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const fadeInUp = {
@@ -77,18 +101,25 @@ function Waitlist() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all backdrop-blur-xl"
+                disabled={loading || submitted}
+                className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all backdrop-blur-xl disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <motion.button
                 type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                whileHover={{ scale: loading || submitted ? 1 : 1.05 }}
+                whileTap={{ scale: loading || submitted ? 1 : 0.95 }}
+                disabled={loading || submitted}
+                className="px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitted ? (
                   <>
                     <Check className="w-5 h-5" />
                     Joined
+                  </>
+                ) : loading ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    Joining...
                   </>
                 ) : (
                   <>
@@ -98,7 +129,15 @@ function Waitlist() {
                 )}
               </motion.button>
             </div>
-            <p className="text-sm text-white/50 mt-4">We'll never spam you. Unsubscribe anytime.</p>
+            {error && (
+              <p className="text-sm text-red-400 mt-2 text-center">{error}</p>
+            )}
+            {submitted && !error && (
+              <p className="text-sm text-green-400 mt-2 text-center">Successfully joined! Check your email for confirmation.</p>
+            )}
+            {!submitted && !error && (
+              <p className="text-sm text-white/50 mt-4">We'll never spam you. Unsubscribe anytime.</p>
+            )}
           </form>
         </motion.div>
 
@@ -347,18 +386,25 @@ function Waitlist() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all backdrop-blur-xl"
+                  disabled={loading || submitted}
+                  className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all backdrop-blur-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <motion.button
                   type="submit"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  whileHover={{ scale: loading || submitted ? 1 : 1.05 }}
+                  whileTap={{ scale: loading || submitted ? 1 : 0.95 }}
+                  disabled={loading || submitted}
+                  className="px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitted ? (
                     <>
                       <Check className="w-5 h-5" />
                       Joined
+                    </>
+                  ) : loading ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      Joining...
                     </>
                   ) : (
                     <>
@@ -368,6 +414,12 @@ function Waitlist() {
                   )}
                 </motion.button>
               </div>
+              {error && (
+                <p className="text-sm text-red-400 mt-2 text-center">{error}</p>
+              )}
+              {submitted && !error && (
+                <p className="text-sm text-green-400 mt-2 text-center">Successfully joined! Check your email for confirmation.</p>
+              )}
             </form>
             </motion.div>
           </div>
